@@ -16,6 +16,7 @@ package ch.qos.logback.core.net;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;
@@ -38,10 +39,12 @@ public class HardenedObjectInputStream extends ObjectInputStream {
 
     final List<String> whitelistedClassNames;
     final static String[] JAVA_PACKAGES = new String[] { "java.lang", "java.util" };
+    final private static int DEPTH_LIMIT = 16;
+    final private static int ARRAY_LIMIT = 10000;
 
     public HardenedObjectInputStream(InputStream in, String[] whilelist) throws IOException {
         super(in);
-
+        this.initObjectFilter();
         this.whitelistedClassNames = new ArrayList<String>();
         if (whilelist != null) {
             for (int i = 0; i < whilelist.length; i++) {
@@ -50,6 +53,11 @@ public class HardenedObjectInputStream extends ObjectInputStream {
         }
     }
 
+    private void initObjectFilter() {
+        this.setObjectInputFilter(ObjectInputFilter.Config.createFilter(
+                "maxarray=" + ARRAY_LIMIT + ";maxdepth=" + DEPTH_LIMIT + ";"
+        ));
+    }
     public HardenedObjectInputStream(InputStream in, List<String> whitelist) throws IOException {
         super(in);
 
